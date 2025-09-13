@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+   # backend/main.py
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+import json
+
+app = FastAPI()
+
+# Allow CORS for frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Load campus data
+with open("data/schedules.json") as f:
+    schedules = json.load(f)
+
+with open("data/facilities.json") as f:
+    facilities = json.load(f)
+
+with open("data/dining.json") as f:
+    dining = json.load(f)
+
+with open("data/library.json") as f:
+    library = json.load(f)
+
+with open("data/admin.json") as f:
+    admin = json.load(f)
+
+def search_campus_data(user_query: str):
+    # Simple keyword-based search to demo combining data
+    query = user_query.lower()
+
+    if "schedule" in query or "class" in query or "event" in query:
+        return f"Schedules:\nClasses: {schedules['classes']}\nEvents: {schedules['events']}"
+    elif "facility" in query or "room" in query or "lab" in query:
+        return f"Facilities:\n{facilities['facilities']}"
+    elif "dining" in query or "food" in query or "cafeteria" in query:
+        return f"Dining:\n{dining['menus']}"
+    elif "library" in query or "book" in query or "study" in query:
+        return f"Library:\nHours: {library['hours']}\nServices: {library['services']}"
+    elif "admin" in query or "registration" in query or "procedure" in query or "form" in query:
+        return f"Administrative Procedures:\n{admin['procedures']}"
+    else:
+        return "Sorry, I couldn't find info on that topic. Please ask about schedules, facilities, dining, library, or administrative procedures."
+
+@app.post("/chat")
+async def chat(request: Request):
+    data = await request.json()
+    user_message = data.get("message", "")
+    
+    # Here you could integrate real GPT call; for demo we use simple logic
+    response_text = search_campus_data(user_message)
+    
+    return {"reply": response_text}
+
+</body>
+</html>
